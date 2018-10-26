@@ -29,6 +29,7 @@ export default class PostAttachmentOpenGraph extends PureComponent {
         }).isRequired,
         deviceHeight: PropTypes.number.isRequired,
         deviceWidth: PropTypes.number.isRequired,
+        imageMetadata: PropTypes.object,
         isReplyPost: PropTypes.bool,
         link: PropTypes.string.isRequired,
         navigator: PropTypes.object.isRequired,
@@ -39,15 +40,11 @@ export default class PostAttachmentOpenGraph extends PureComponent {
     constructor(props) {
         super(props);
 
-        this.state = {
-            hasImage: false,
-            imageUrl: null,
-        };
+        this.state = this.getBestImageUrl(props.openGraphData);
     }
 
     componentDidMount() {
         this.mounted = true;
-        this.getBestImageUrl(this.props.openGraphData);
     }
 
     componentWillMount() {
@@ -61,7 +58,7 @@ export default class PostAttachmentOpenGraph extends PureComponent {
         }
 
         if (this.props.openGraphData !== nextProps.openGraphData) {
-            this.getBestImageUrl(nextProps.openGraphData);
+            this.setState(this.getBestImageUrl(nextProps.openGraphData));
         }
     }
 
@@ -69,17 +66,20 @@ export default class PostAttachmentOpenGraph extends PureComponent {
         this.mounted = false;
     }
 
-    fetchData(url, openGraphData) {
+    fetchData = (url, openGraphData) => {
         if (!openGraphData) {
             this.props.actions.getOpenGraphMetadata(url);
         }
-    }
+    };
 
-    getBestImageUrl(data) {
+    getBestImageUrl = (data) => {
         if (!data || !data.images) {
-            return;
+            return {
+                hasImage: false,
+            };
         }
 
+        const {imageMetadata} = this.props;
         const bestDimensions = {
             width: this.getViewPostWidth(),
             height: MAX_IMAGE_HEIGHT,
@@ -87,17 +87,30 @@ export default class PostAttachmentOpenGraph extends PureComponent {
 
         const bestImage = getNearestPoint(bestDimensions, data.images, 'width', 'height');
         const imageUrl = bestImage.secure_url || bestImage.url;
+        let ogImage;
+        if (imageMetadata && imageMetadata[imageUrl]) {
+            ogImage = imageMetadata[imageUrl];
+        }
 
-        this.setState({
-            hasImage: true,
-            ...bestDimensions,
-            openGraphImageUrl: imageUrl,
-        });
+        if (!ogImage) {
+            ogImage = data.images.find((i) => i.url === imageUrl || i.secure_url === imageUrl);
+        }
+
+        let dimensions = bestDimensions;
+        if (ogImage?.width && ogImage?.height) {
+            dimensions = calculateDimensions(ogImage.height, ogImage.width, this.getViewPostWidth());
+        }
 
         if (imageUrl) {
             ImageCacheManager.cache(this.getFilename(imageUrl), imageUrl, this.getImageSize);
         }
-    }
+
+        return {
+            hasImage: true,
+            ...dimensions,
+            openGraphImageUrl: imageUrl,
+        };
+    };
 
     getFilename = (link) => {
         let filename = link.substring(link.lastIndexOf('/') + 1, link.indexOf('?') === -1 ? link.length : link.indexOf('?'));
@@ -108,29 +121,48 @@ export default class PostAttachmentOpenGraph extends PureComponent {
             filename = `${filename}${ext}`;
         }
 
-        return `og-${filename}`;
+        return `og-${filename.replace(/:/g, '-')}`;
     };
 
     getImageSize = (imageUrl) => {
+        const {imageMetadata, openGraphData} = this.props;
+        const {openGraphImageUrl} = this.state;
+
         let prefix = '';
         if (Platform.OS === 'android') {
             prefix = 'file://';
         }
 
         const uri = `${prefix}${imageUrl}`;
+        let ogImage;
+        if (imageMetadata && imageMetadata[openGraphImageUrl]) {
+            ogImage = imageMetadata[openGraphImageUrl];
+        }
 
-        Image.getSize(uri, (width, height) => {
-            const dimensions = calculateDimensions(height, width, this.getViewPostWidth());
+        if (!ogImage) {
+            ogImage = openGraphData.images.find((i) => i.url === openGraphImageUrl || i.secure_url === openGraphImageUrl);
+        }
 
-            if (this.mounted) {
-                this.setState({
-                    ...dimensions,
-                    originalHeight: height,
-                    originalWidth: width,
-                    imageUrl: uri,
-                });
-            }
-        }, () => null);
+        if (ogImage?.width && ogImage?.height) {
+            this.setImageSize(uri, ogImage.width, ogImage.height);
+        } else {
+            Image.getSize(uri, (width, height) => {
+                this.setImageSize(uri, width, height);
+            }, () => null);
+        }
+    };
+
+    setImageSize = (imageUrl, originalWidth, originalHeight) => {
+        if (this.mounted) {
+            const dimensions = calculateDimensions(originalHeight, originalWidth, this.getViewPostWidth());
+
+            this.setState({
+                imageUrl,
+                originalWidth,
+                originalHeight,
+                ...dimensions,
+            });
+        }
     };
 
     getViewPostWidth = () => {
@@ -188,7 +220,7 @@ export default class PostAttachmentOpenGraph extends PureComponent {
                 </Text>
             </View>
         );
-    }
+    };
 
     renderImage = () => {
         if (!this.state.hasImage) {
@@ -209,11 +241,10 @@ export default class PostAttachmentOpenGraph extends PureComponent {
         return (
             <View
                 ref='item'
-                style={style.imageContainer}
+                style={[style.imageContainer, {width, height}]}
             >
                 <TouchableWithoutFeedback
                     onPress={this.handlePreviewImage}
-                    style={{width, height}}
                 >
                     <Image
                         style={[style.image, {width, height}]}
@@ -223,7 +254,7 @@ export default class PostAttachmentOpenGraph extends PureComponent {
                 </TouchableWithoutFeedback>
             </View>
         );
-    }
+    };
 
     render() {
         const {
@@ -233,11 +264,11 @@ export default class PostAttachmentOpenGraph extends PureComponent {
             theme,
         } = this.props;
 
+        const style = getStyleSheet(theme);
+
         if (!openGraphData) {
             return null;
         }
-
-        const style = getStyleSheet(theme);
 
         let siteName;
         if (openGraphData.site_name) {

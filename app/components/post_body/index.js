@@ -27,6 +27,8 @@ import {
 } from 'mattermost-redux/utils/post_utils';
 import {isAdmin as checkIsAdmin, isSystemAdmin as checkIsSystemAdmin} from 'mattermost-redux/utils/user_utils';
 
+import {getDimensions} from 'app/selectors/device';
+
 import PostBody from './post_body';
 
 const POST_TIMEOUT = 20000;
@@ -90,6 +92,7 @@ function mapStateToProps(state, ownProps) {
     }
 
     return {
+        metadata: post.metadata,
         postProps: post.props || {},
         postType: post.type || '',
         fileIds: post.file_ids,
@@ -106,6 +109,7 @@ function mapStateToProps(state, ownProps) {
         canAddReaction,
         canDelete,
         canEdit,
+        ...getDimensions(state),
     };
 }
 

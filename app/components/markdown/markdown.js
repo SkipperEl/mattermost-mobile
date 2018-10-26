@@ -42,6 +42,7 @@ export default class Markdown extends PureComponent {
         autolinkedUrlSchemes: PropTypes.array.isRequired,
         baseTextStyle: CustomPropTypes.Style,
         blockStyles: PropTypes.object,
+        imageMetadata: PropTypes.object,
         isEdited: PropTypes.bool,
         isReplyPost: PropTypes.bool,
         isSearchResult: PropTypes.bool,
@@ -179,6 +180,7 @@ export default class Markdown extends PureComponent {
         return (
             <MarkdownImage
                 linkDestination={linkDestination}
+                imageMetadata={this.props.imageMetadata}
                 isReplyPost={this.props.isReplyPost}
                 navigator={this.props.navigator}
                 onLongPress={this.props.onLongPress}

@@ -30,6 +30,15 @@ function makeGetFirstLink() {
     };
 }
 
+function getOpenGraphFromEmbeds(embeds) {
+    const og = embeds.find((e) => e.type === 'opengraph');
+    if (og) {
+        return og.data;
+    }
+
+    return null;
+}
+
 function makeMapStateToProps() {
     const getFirstLink = makeGetFirstLink();
 
@@ -46,7 +55,7 @@ function makeMapStateToProps() {
             ...getDimensions(state),
             googleDeveloperKey: config.GoogleDeveloperKey,
             link,
-            openGraphData: getOpenGraphMetadataForUrl(state, link),
+            openGraphData: ownProps.metadata?.embeds ? getOpenGraphFromEmbeds(ownProps.metadata.embeds) : getOpenGraphMetadataForUrl(state, link),
             showLinkPreviews: previewsEnabled && config.EnableLinkPreviews === 'true',
             theme: getTheme(state),
         };

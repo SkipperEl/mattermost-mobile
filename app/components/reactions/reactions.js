@@ -34,7 +34,7 @@ export default class Reactions extends PureComponent {
         theme: PropTypes.object.isRequired,
         canAddReaction: PropTypes.bool,
         canRemoveReaction: PropTypes.bool.isRequired,
-    }
+    };
 
     static defaultProps = {
         position: 'right',
@@ -53,8 +53,10 @@ export default class Reactions extends PureComponent {
     }
 
     componentDidMount() {
-        const {actions, postId} = this.props;
-        actions.getReactionsForPost(postId);
+        const {actions, postId, reactions} = this.props;
+        if (!reactions?.length) {
+            actions.getReactionsForPost(postId);
+        }
     }
 
     handleReactionPress = (emoji, remove) => {
