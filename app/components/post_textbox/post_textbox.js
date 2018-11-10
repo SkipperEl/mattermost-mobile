@@ -77,26 +77,6 @@ export default class PostTextbox extends PureComponent {
     constructor(props) {
         super(props);
 
-        console.log('*** post_textbox');
-
-        this.hideKeyboardPanGesture = PanResponder.create({
-            onStartShouldSetPanResponder: (evt, gestureState) => true,
-            onStartShouldSetPanResponderCapture: (evt, gestureState) => true,
-            onMoveShouldSetPanResponder: (evt, gestureState) => true,
-            onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-
-            onPanResponderGrant: (evt, gestureState) => {
-                console.log('*** grant');
-            },
-            onPanResponderMove: (evt, gestureState) => {
-                console.log('*** gesture', gestureState.dy);
-                if (gestureState.dy > 0) {
-                    console.log('*** trying to dismiss');
-                    Keyboard.dismiss();
-                }
-            },
-        });
-
         this.state = {
             contentHeight: INITIAL_HEIGHT,
             cursorPosition: 0,
@@ -604,7 +584,7 @@ export default class PostTextbox extends PureComponent {
         }
 
         return (
-            <View {...this.hideKeyboardPanGesture.panHandlers} >
+            <View>
                 <Typing/>
                 <FileUploadPreview
                     channelId={channelId}
