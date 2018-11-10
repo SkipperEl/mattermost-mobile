@@ -30,13 +30,13 @@ export default class KeyboardLayout extends PureComponent {
         this.hideKeyboardPanGesture = PanResponder.create({
             onMoveShouldSetPanResponder: (evt, gestureState) => true,
             //onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-            onPanResponderTerminationRequest: (evt, gestureState) => false,
+            onPanResponderTerminationRequest: (evt, gestureState) => true,
 
             onPanResponderGrant: (evt, gestureState) => {
                 console.log('***** grant');
             },
             onPanResponderMove: (evt, gestureState) => {
-                console.log('***** gesture', gestureState.dy);
+                console.log('***** gesture', gestureState.moveY, gestureState.dy, this.state.keyboardHeight);
                 if (gestureState.dy > 0) {
                     console.log('***** trying to dismiss');
                     Keyboard.dismiss();
