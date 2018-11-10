@@ -5,6 +5,7 @@ import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import {
     Keyboard,
+    PanResponder,
     Platform,
     StyleSheet,
     View,
@@ -24,6 +25,25 @@ export default class KeyboardLayout extends PureComponent {
         this.state = {
             keyboardHeight: 0,
         };
+
+
+        this.hideKeyboardPanGesture = PanResponder.create({
+            onMoveShouldSetPanResponder: (evt, gestureState) => true,
+            //onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
+            onPanResponderTerminationRequest: (evt, gestureState) => false,
+
+            onPanResponderGrant: (evt, gestureState) => {
+                console.log('***** grant');
+            },
+            onPanResponderMove: (evt, gestureState) => {
+                console.log('***** gesture', gestureState.dy);
+                if (gestureState.dy > 0) {
+                    console.log('***** trying to dismiss');
+                    Keyboard.dismiss();
+                }
+            },
+        });
+
     }
 
     componentDidMount() {
@@ -60,7 +80,7 @@ export default class KeyboardLayout extends PureComponent {
         }
 
         return (
-            <View style={layoutStyle}>
+            <View style={layoutStyle} {...this.hideKeyboardPanGesture.panHandlers}>
                 {this.props.children}
             </View>
         );
