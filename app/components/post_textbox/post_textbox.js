@@ -603,8 +603,7 @@ export default class PostTextbox extends PureComponent {
         }
 
         return (
-            <React.Fragment>
-                <View {...this.hideKeyboardPanGesture.panHandlers} />
+            <View {...this.hideKeyboardPanGesture.panHandlers} >
                 <Typing/>
                 <FileUploadPreview
                     channelId={channelId}
@@ -650,7 +649,7 @@ export default class PostTextbox extends PureComponent {
                     </View>
                 )}
                 {channelIsArchived && this.archivedView(theme, style)}
-            </React.Fragment>
+            </View>
         );
     }
 }
