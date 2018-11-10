@@ -90,7 +90,8 @@ export default class PostTextbox extends PureComponent {
             },
             onPanResponderMove: (evt, gestureState) => {
                 console.log('*** gesture', gestureState.dy);
-                if (gestureState.dy < -2) {
+                if (gestureState.dy > 0) {
+                    console.log('*** trying to dismiss');
                     Keyboard.dismiss();
                 }
             },
