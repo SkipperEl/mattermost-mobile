@@ -3,7 +3,7 @@
 
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
-import {Alert, BackHandler, Keyboard, Platform, Text, TextInput, TouchableOpacity, View} from 'react-native';
+import {Alert, BackHandler, Keyboard, PanResponder, Platform, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import {intlShape} from 'react-intl';
 import Button from 'react-native-button';
 import {General, RequestStatus} from 'mattermost-redux/constants';
@@ -77,6 +77,25 @@ export default class PostTextbox extends PureComponent {
     constructor(props) {
         super(props);
 
+        console.log('*** post_textbox');
+
+        this.hideKeyboardPanGesture = PanResponder.create({
+            onStartShouldSetPanResponder: (evt, gestureState) => true,
+            onStartShouldSetPanResponderCapture: (evt, gestureState) => true,
+            onMoveShouldSetPanResponder: (evt, gestureState) => true,
+            onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
+
+            onPanResponderGrant: (evt, gestureState) => {
+                console.log('*** grant');
+            },
+            onPanResponderMove: (evt, gestureState) => {
+                console.log('*** gesture', gestureState.dy);
+                if (gestureState.dy < -2) {
+                    Keyboard.dismiss();
+                }
+            },
+        });
+
         this.state = {
             contentHeight: INITIAL_HEIGHT,
             cursorPosition: 0,
@@ -89,6 +108,7 @@ export default class PostTextbox extends PureComponent {
     }
 
     componentDidMount() {
+        console.log('*** mount');
         const event = this.props.rootId ? INSERT_TO_COMMENT : INSERT_TO_DRAFT;
         EventEmitter.on(event, this.handleInsertTextToDraft);
         if (Platform.OS === 'android') {
@@ -584,6 +604,7 @@ export default class PostTextbox extends PureComponent {
 
         return (
             <React.Fragment>
+                <View {...this.hideKeyboardPanGesture.panHandlers} />
                 <Typing/>
                 <FileUploadPreview
                     channelId={channelId}
