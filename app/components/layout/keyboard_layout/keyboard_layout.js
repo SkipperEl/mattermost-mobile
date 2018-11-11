@@ -26,7 +26,6 @@ export default class KeyboardLayout extends PureComponent {
             keyboardHeight: 0,
         };
 
-
         this.hideKeyboardPanGesture = PanResponder.create({
             onMoveShouldSetPanResponder: (evt, gestureState) => {
                 if (gestureState.moveY > this.mainViewHeight - this.state.keyboardHeight && gestureState.dy > 0) {
