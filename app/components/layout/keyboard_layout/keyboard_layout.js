@@ -28,17 +28,24 @@ export default class KeyboardLayout extends PureComponent {
 
 
         this.hideKeyboardPanGesture = PanResponder.create({
-            onMoveShouldSetPanResponder: (evt, gestureState) => true,
-            //onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
+            onMoveShouldSetPanResponder: (evt, gestureState) => {
+                console.log('***** kbdH', this.state.keyboardHeight, ' moveY', gestureState.moveY, ' mainViewH', this.mainViewHeight);
+
+                if (this.state.keyboardHeight <= 0) {
+                    return false;
+                }
+
+                if (gestureState.moveY > (this.mainViewHeight - this.state.keyboardHeight) ) {
+                    return true;
+                }
+
+                return false;
+            },
             onPanResponderTerminationRequest: (evt, gestureState) => true,
 
-            onPanResponderGrant: (evt, gestureState) => {
-                console.log('***** grant');
-            },
             onPanResponderMove: (evt, gestureState) => {
-                console.log('***** gesture', gestureState.moveY, gestureState.dy, this.state.keyboardHeight);
+                //console.log('***** gesture', gestureState.moveY, gestureState.dy, this.state.keyboardHeight);
                 if (gestureState.dy > 0) {
-                    console.log('***** trying to dismiss');
                     Keyboard.dismiss();
                 }
             },
@@ -71,6 +78,10 @@ export default class KeyboardLayout extends PureComponent {
         });
     };
 
+    onLayout = (e) => {
+        this.mainViewHeight = e?.nativeEvent?.layout?.height || 0;
+    }
+
     render() {
         const layoutStyle = [this.props.style, style.keyboardLayout];
 
@@ -80,7 +91,7 @@ export default class KeyboardLayout extends PureComponent {
         }
 
         return (
-            <View style={layoutStyle} {...this.hideKeyboardPanGesture.panHandlers}>
+            <View onLayout={this.onLayout} style={layoutStyle} {...this.hideKeyboardPanGesture.panHandlers}>
                 {this.props.children}
             </View>
         );
